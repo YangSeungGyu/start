@@ -1,0 +1,153 @@
+/*-------------------레이아웃-------------------*/
+
+.topDiv {
+	width: 100%;
+}
+
+.bodyDiv {
+	/*background-image: url('/resources/img/background-1.jpg'); 
+	background-repeat: repeat;*/
+	min-height: 500px;
+
+	
+}
+.bodyLeftMenu{
+	width : 150px;
+	height: 500px;
+	float: left;
+	
+}
+.bodyContents{
+	width : 900px;
+	float: right;
+}
+
+.bodySubDiv {
+	position:relative;
+	width : 1080px;
+	background-width:1080px; 
+	left:50%; 
+	margin-left:-540px;
+}
+
+.footerDiv {
+	padding-top : 10px;
+	background : black;
+	color : white;
+	width: 100%;
+}
+
+.footerSubDiv{
+	position:relative;
+	width : 1080px;
+	background-width:1080px; 
+	left:50%; 
+	margin-left:-540px;
+	height : 150px; 
+}
+
+/*------------------상단 라인---------------------*/
+
+.topLineDiv {
+	border-bottom:1px solid black;
+	padding-bottom: 4px;
+}
+
+.topLineSubDiv {
+	position:relative;
+	width : 1080px;
+	background-width:1080px; 
+	left:50%; 
+	margin-left:-540px; 
+	text-align: right;
+	color: #707070;
+	font-weight: bold;
+}
+/*-------------------상단 이미지-------------------*/
+.topImg{
+	position:relative;
+	width : 1080px;
+	background-width:1080px; 
+	left:50%; 
+	margin-left:-540px; 
+	
+	margin-top: 5px;
+	margin-bottom: 5px;
+}
+
+
+/*-------------------상단 메뉴-------------------*/
+.topMenu {
+	border-bottom:1px solid black;
+	width: 100%;
+}
+
+/*-------------------좌측 메뉴-------------------*/
+.leftMenuTitle{
+	margin-top:10px;
+	background-color: black;
+	text-align: center;
+	
+}
+
+.leftMenuTitle a{
+	color: white;	
+	cursor:pointer;
+	text-decoration:none;
+	font-size: 20px;
+	font-weight: 900;
+}
+
+.leftMenuTitle a:hover{
+	color: gray;	
+} 
+
+.leftMenuUl{
+	list-style:none;
+   padding-left:0px;   
+}
+
+.leftMenuLi a{
+	cursor:pointer;
+	text-decoration:none;
+	color: black;
+	font-weight: 700;
+	
+}
+.leftMenuLi {
+	border-bottom: solid 2px black;
+	margin-bottom : 5px;
+	padding-bottom: 5px;
+	
+}
+
+.leftMenuLi a:hover {
+	color:#A6A6A6;
+}	
+	
+.leftMenuLi .hide{
+	list-style:none;
+	display:none;
+	padding-left:5px;
+	padding-top: 5px;
+}
+
+
+
+.leftMenuLi .hide li{
+	content: "-";
+    display: inline-block;
+    vertical-align: middle;
+    padding: 0px 5px 6px 0px;
+}
+.hide li a {
+	color:blck;
+	font-weight: 400;
+}
+
+.hide li a:hover {
+	color:#A6A6A6;
+	font-weight: 400;
+	text-decoration : underline;
+}	
+

@@ -1,0 +1,524 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper   
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"   
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">  
+
+<mapper namespace="com.start.www.board.sql.smartBoardSql">
+
+<resultMap id="SamrtBoardBeanMap" type="SamrtBoardBean">
+	  <id property="no" column="NO" />
+	  <id property="category" column="CATEGORY" />
+	  <id property="categoryNm" column="CATEGORY_NM" />
+	  <id property="title" column="TITLE" />
+	  <id property="contents" column="CONTENTS" />
+	  <id property="publicLv" column="PUBLIC_LV" />
+	  <id property="publicLvNm" column="PUBLIC_LV_NM" />
+	  <id property="reply" column="REPLY" />
+	  <id property="userId" column="USER_ID" />
+	  <id property="userNicNm" column="USER_NIC_NM" />
+	  <id property="viewCnt" column="VIEW_CNT" />
+	  <id property="rcmndCnt" column="RCMND_CNT" />
+	  <id property="inDt" column="IN_DT" />
+	  <id property="upDt" column="UP_DT" />
+	  <id property="status" column="STATUS" />
+	  <id property="isFile" column="IS_FILE" />
+	  <id property="isNew" column="IS_NEW" />
+	  <id property="fileCnt" column="FILE_CNT" />
+	  <id property="commentCnt" column="COMMENT_CNT" />
+	  <id property="isImg" column="IS_IMG" />
+	  
+	  
+</resultMap>
+
+<resultMap id="CompBeanMap" type="CompBean">
+  <id property="cdNm" column="CD_NM" />
+  <id property="cdExpl" column="CD_EXPL" />
+</resultMap>
+
+<resultMap id="SmartFileBeanMap" type="SmartFileBean">
+	<id property="idx" column="IDX" />
+	<id property="boardNo" column="BOARD_NO" />
+	<id property="fileId" column="FILE_ID" />
+	<id property="fileNm" column="FILE_NM" />
+</resultMap>
+
+<resultMap id="SmartCommentBeanMap" type="SmartCommentBean">
+	<id property="idx" column="IDX" />
+	<id property="boardNo" column="BOARD_NO" />
+	<id property="contents" column="CONTENTS" />
+	<id property="status" column="STATUS" />
+	<id property="userId" column="USER_ID" />
+	<id property="userNicNm" column="USER_NIC_NM" />
+	<id property="inDt" column="IN_DT" />
+	<id property="upDt" column="UP_DT" />
+</resultMap>
+
+
+
+ <!-- 게시판 카테고리 -->
+ <select id="smartCategoryList" resultMap="CompBeanMap" >
+ <![CDATA[
+ 	SELECT CD,CD_NM FROM ST_DETAIL_CD 
+	WHERE MASTER_CD = '700000'
+	AND USE_YN = 'Y'
+	]]>
+ </select>
+ 
+ 
+<!-- 게시판 작성 시퀀스 -->
+<select id="smartWriteBoardNo" resultType="string" >
+ <![CDATA[
+ 	SELECT SMART_BOARD_SQ.NEXTVAL AS SQ
+ 	FROM DUAL
+ ]]>	
+ </select>
+ 
+ 
+ <!-- 게시판 파일정보  -->
+ <insert id="smartFileWrite" parameterType="SmartFileBean">
+  <![CDATA[
+	INSERT INTO ST_SMART_BOARD_FILE
+	(
+	    IDX
+	    , FILE_ID
+	    , FILE_NM
+	    ,BOARD_NO
+    )
+	VALUES 
+	]]>
+	(
+	    SMART_FILE_SQ.NEXTVAL
+	    ,#{fileId}
+	    ,#{fileNm}
+	    ,#{boardNo}
+    )
+	</insert>
+
+<!-- 기본 게시판 작성 -->
+  <insert id="smartBoardWrite" parameterType="SamrtBoardBean" >
+  <![CDATA[
+  INSERT INTO ST_SMART_BOARD
+	  (
+	    NO
+       ,CATEGORY
+	   ,TITLE
+	   ,CONTENTS
+       ,PUBLIC_LV
+       ,REPLY
+	   ,USER_ID
+	   ,USER_NIC_NM
+	   ,VIEW_CNT
+       ,RCMND_CNT
+	   ,IN_DT
+	   ,STATUS
+	   ,TOP_NO
+	  )
+	  VALUES
+	  ]]>
+	  (
+	    #{no}
+      	, #{category}
+	    , #{title}
+	    , #{contents}
+      	, #{publicLv}
+      	, #{reply}
+	    , #{userId}
+	    , #{userNicNm}
+	    , 0
+      	, 0
+	    , SYSDATE
+	    , 'N'
+	    , #{topNo}
+	  )
+ </insert>
+ 
+ <!-- 스마트 게시판 최대 개수-->
+  <select id="smartBoardMaxCnt" resultType="int">
+  <![CDATA[
+ 	SELECT 
+	count(*) AS CNT	
+	FROM ST_SMART_BOARD 
+ ]]>
+	WHERE CATEGORY=#{PageCategory}
+	 <if test="searchTerm != null">	       	 
+	         <choose>
+		    	<when test="searchPart =='title'">
+		    		AND TITLE LIKE '%'||#{searchTerm}||'%'
+		    	</when>
+		    	<when test="searchPart =='contents'">
+		    		AND CONTENTS LIKE '%'||#{searchTerm}||'%'
+		    	</when>
+		    	<when test="searchPart =='titlAndCont'">
+		    		AND CONTENTS LIKE '%'||#{searchTerm}||'%'
+		    		OR
+		    		CATEGORY=#{PageCategory}
+		    		AND
+		    		TITLE LIKE '%'||#{searchTerm}||'%'
+		    	</when>
+		    	<when test="searchPart =='nickName'">
+		    		AND USER_NIC_NM LIKE '%'||#{searchTerm}||'%'
+		    	</when>
+		    </choose>
+	       </if>
+ </select>
+ 
+  <!-- 스마트 게시판 리스트 -->
+  <select id="smartBoardList" parameterType="SamrtBoardBean" resultMap="SamrtBoardBeanMap" >
+  <![CDATA[
+ 	SELECT * 
+	FROM
+	(
+	  SELECT 
+		ROWNUM RN 
+		,NO
+		,CATEGORY
+		,DECODE(LEVEL,1,TITLE,'└RE:'||TITLE) AS TITLE
+		,PUBLIC_LV          
+		,REPLY
+		,USER_ID
+		,USER_NIC_NM
+		,VIEW_CNT
+		,RCMND_CNT
+		,IS_FILE
+		,FILE_CNT
+		,COMMENT_CNT
+		,UP_DT
+		,STATUS
+		,IS_NEW
+		,IS_IMG
+		,TOP_NO
+	  FROM
+	  (
+	    SELECT     
+	        NO
+          ,CATEGORY
+	        ,TITLE
+          ,PUBLIC_LV          
+          ,REPLY
+	        ,USER_ID
+	        ,USER_NIC_NM
+	        ,VIEW_CNT
+           ,NVL(RD.RCMND_CNT,0) AS RCMND_CNT
+          ,DECODE(NVL(FL.CNT,0),0,'N','Y') AS IS_FILE
+          ,NVL(FL.CNT,0) AS FILE_CNT
+          ,NVL(CM.COMMENT_CNT,0) AS COMMENT_CNT
+	        ,CASE
+	            WHEN UP_DT IS NULL 
+	            THEN DECODE(TO_CHAR(IN_DT,'YYYY-MM-DD'),TO_CHAR(SYSDATE,'YYYY-MM-DD'),TO_CHAR(IN_DT,'hh24:mm:ss'),TO_CHAR(IN_DT,'YYYY-MM-DD')) 
+	            WHEN UP_DT IS NOT NULL
+	            THEN DECODE(TO_CHAR(UP_DT,'YYYY-MM-DD'),TO_CHAR(SYSDATE,'YYYY-MM-DD'),TO_CHAR(UP_DT,'hh24:mm:ss'),TO_CHAR(UP_DT,'YYYY-MM-DD'))     
+	          END AS UP_DT
+	        ,STATUS
+	        ,DECODE(TO_CHAR(IN_DT,'YYYY-MM-DD'),TO_CHAR(SYSDATE,'YYYY-MM-DD'),'Y','N') AS IS_NEW
+	        ,TOP_NO
+			,DECODE(NVL(INSTR(CONTENTS, '<img ', 1, 1),0),0,'N','Y') AS IS_IMG
+	      FROM ST_SMART_BOARD BD
+	      LEFT OUTER JOIN 
+	        (
+	          SELECT BOARD_NO, COUNT(*) AS RCMND_CNT FROM ST_SMART_BOARD_RCMND
+	          WHERE STATUS = 'Y'
+	          GROUP BY BOARD_NO
+	        ) RD
+	        ON
+	        BD.NO = RD.BOARD_NO
+	         LEFT OUTER JOIN
+          (
+	          SELECT BOARD_NO,COUNT(*) CNT 
+	          FROM ST_SMART_BOARD_FILE
+	          GROUP BY BOARD_NO
+          ) FL
+          ON
+          BD.NO = FL.BOARD_NO
+          LEFT OUTER JOIN
+          (
+            SELECT BOARD_NO ,COUNT(*) AS COMMENT_CNT 
+            FROM ST_SMART_COMMENT
+            GROUP BY BOARD_NO
+          )CM
+          ON
+          BD.NO = CM.BOARD_NO
+    ]]>
+	       WHERE BD.CATEGORY=#{PageCategory}
+	       <if test="searchTerm != null">
+	         <choose>
+		    	<when test="searchPart =='title'">
+		    		AND TITLE LIKE '%'||#{searchTerm}||'%'
+		    	</when>
+		    	<when test="searchPart =='contents'">
+		    		AND CONTENTS LIKE '%'||#{searchTerm}||'%'
+		    	</when>
+		    	<when test="searchPart =='titlAndCont'">
+		    		AND CONTENTS LIKE '%'||#{searchTerm}||'%'
+		    		OR
+		    		BD.CATEGORY=#{PageCategory}
+		    		AND
+		    		TITLE LIKE '%'||#{searchTerm}||'%'
+		    	</when>
+		    	<when test="searchPart =='nickName'">
+		    		AND USER_NIC_NM LIKE '%'||#{searchTerm}||'%'
+		    	</when>
+		    </choose>
+	       </if>
+	       
+	      ORDER BY NO DESC
+	    ) SB
+	START WITH TOP_NO IS NULL
+    CONNECT BY PRIOR  NO = TOP_NO
+    <choose>
+    	<when test="searchOrder =='inDt'">
+    		ORDER SIBLINGS BY NO DESC
+    	</when>
+    	<when test="searchOrder =='viewCnt'">
+    		ORDER SIBLINGS BY VIEW_CNT DESC, NO DESC
+    	</when>
+    	<when test="searchOrder =='rcmndCnt'">
+    		ORDER SIBLINGS BY RCMND_CNT DESC, NO DESC
+    	</when>
+    	<otherwise>
+    		ORDER SIBLINGS BY NO DESC
+    	</otherwise>
+    </choose>
+	)
+  WHERE RN BETWEEN #{firstRow} AND #{lastRow}
+	
+ </select>
+ 
+ <update id="smartBoardAddCnt" parameterType="SamrtBoardBean" >
+  <![CDATA[
+ 	UPDATE ST_SMART_BOARD
+	SET VIEW_CNT = 
+  ]]>
+	(SELECT VIEW_CNT+1 FROM ST_SMART_BOARD WHERE NO = #{no} AND ROWNUM = 1)
+	WHERE NO = #{no}
+	AND STATUS = 'N'
+ </update>
+ 
+ <!-- 스마트 게시판 상세 -->
+  <select id="smartBoardRead" parameterType="SamrtBoardBean" resultMap="SamrtBoardBeanMap" >
+  <![CDATA[
+ 	SELECT 
+	 NO
+    ,CATEGORY
+    ,F_DTE_CD(CATEGORY) AS CATEGORY_NM
+	,TITLE
+	,USER_ID
+	,CONTENTS
+    ,PUBLIC_LV
+    ,CASE
+      WHEN PUBLIC_LV = '1'
+      THEN '전체 공개'
+      WHEN PUBLIC_LV = '2'
+      THEN '회원공개'
+      WHEN PUBLIC_LV = '3'
+      THEN '비공개'      
+     END AS PUBLIC_LV_NM    
+	,USER_NIC_NM
+	,VIEW_CNT
+    ,RCMND_CNT
+    ,NVL(CM.COMMENT_CNT,0) AS COMMENT_CNT
+	,CASE
+	WHEN UP_DT IS NULL 
+	      THEN DECODE(TO_CHAR(IN_DT,'YYYY-MM-DD'),TO_CHAR(SYSDATE,'YYYY-MM-DD'),TO_CHAR(IN_DT,'hh24:mm:ss'),TO_CHAR(IN_DT,'YYYY-MM-DD')) 
+	      WHEN UP_DT IS NOT NULL
+	      THEN DECODE(TO_CHAR(UP_DT,'YYYY-MM-DD'),TO_CHAR(SYSDATE,'YYYY-MM-DD'),TO_CHAR(UP_DT,'hh24:mm:ss'),TO_CHAR(UP_DT,'YYYY-MM-DD'))     
+    END AS UP_DT
+	,STATUS
+	,REPLY
+	,TOP_NO
+	FROM ST_SMART_BOARD BD
+	LEFT OUTER JOIN
+ 	 (
+	  	SELECT BOARD_NO ,COUNT(*) AS COMMENT_CNT 
+	  	FROM ST_SMART_COMMENT
+	  	GROUP BY BOARD_NO
+  	)CM
+  	ON
+  	BD.NO = CM.BOARD_NO
+  	]]>
+	WHERE  STATUS='N'
+	AND NO = #{no}
+ </select>
+ 
+ <!-- 게시판 상세 파일 리스트 -->
+ <select id="smartFileList"  parameterType="SamrtBoardBean" resultMap="SmartFileBeanMap">
+ <![CDATA[
+	SELECT BOARD_NO, IDX, FILE_ID, FILE_NM 
+	FROM ST_SMART_BOARD_FILE 
+]]>
+	WHERE BOARD_NO = #{no} 
+ </select>
+ 
+ 
+  <!-- 게시판 상세 코멘트 리스트 -->
+ <select id="smartCommentList"  parameterType="SamrtBoardBean" resultMap="SmartCommentBeanMap">
+	SELECT 
+	  IDX  
+	  ,CONTENTS  
+	  ,USER_ID
+	  ,USER_NIC_NM
+	  ,CASE
+		WHEN UP_DT IS NULL 
+		      THEN DECODE(TO_CHAR(IN_DT,'YYYY-MM-DD'),TO_CHAR(SYSDATE,'YYYY-MM-DD'),TO_CHAR(IN_DT,'hh24:mm:ss'),TO_CHAR(IN_DT,'YYYY-MM-DD')) 
+		      WHEN UP_DT IS NOT NULL
+		      THEN DECODE(TO_CHAR(UP_DT,'YYYY-MM-DD'),TO_CHAR(SYSDATE,'YYYY-MM-DD'),TO_CHAR(UP_DT,'hh24:mm:ss'),TO_CHAR(UP_DT,'YYYY-MM-DD'))     
+	    END AS UP_DT
+	FROM ST_SMART_COMMENT
+	WHERE 
+	BOARD_NO = #{no}
+	ORDER BY IN_DT
+ </select>
+ 
+ <!-- 삭제 게시물의 코멘트 삭제 --> 
+  <delete id="smartIncludeCommentsDelete" parameterType="SamrtBoardBean">
+	DELETE
+	FROM ST_SMART_COMMENT
+	WHERE BOARD_NO = #{no}
+  </delete>
+ 
+  <!-- 게시물 삭제 --> 
+  <delete id="smartBoardDelete" parameterType="SamrtBoardBean">
+	DELETE
+	FROM ST_SMART_BOARD
+	WHERE NO = #{no}
+ </delete>
+ 
+  <!-- 답글 있는 게시물 삭제 --> 
+  <update id="smartIncludeReDelete" parameterType="SamrtBoardBean">
+	UPDATE ST_SMART_BOARD
+	SET TITLE = #{title}  	
+	, CONTENTS = #{contents}	
+	, STATUS = 'D'
+	WHERE NO = #{no}
+	
+ </update>
+ 
+  <select id="smartTopDel" parameterType="SamrtBoardBean"  resultType="int">
+	SELECT 
+	COUNT(*) CNT
+	FROM ST_SMART_BOARD
+	WHERE 
+	STATUS = 'D'
+	AND NO = #{topNo}
+ </select>
+ 
+ <select id="smartDeleteFileList" parameterType="SamrtBoardBean" resultMap="SmartFileBeanMap">
+	 SELECT IDX
+	FROM ST_SMART_BOARD_FILE 
+	WHERE BOARD_NO = #{no}
+ </select>
+ 
+ <!-- 게시물 수정 --> 
+  <update id="smartBoardModify" parameterType="SamrtBoardBean">
+	UPDATE ST_SMART_BOARD
+	SET TITLE = #{title}
+  	, CATEGORY = #{category}
+	, CONTENTS = #{contents}
+  	, PUBLIC_LV= #{publicLv}
+	, UP_USER_ID = #{upUserId}
+	, UP_DT = SYSDATE
+	WHERE NO = #{no}
+ </update>
+ 
+ <!-- 게시물 수정 답글 카테고리 이동   --> 
+  <update id="smartIncludeReModify" parameterType="SamrtBoardBean">
+	UPDATE ST_SMART_BOARD
+	SET CATEGORY = #{category}
+	WHERE TOP_NO = #{no}
+ </update>
+ 
+ <!-- 파일경로 찾기 -->
+ <select id="smartFilePath" parameterType="string" resultType="string">
+ 	SELECT FILE_ID
+	FROM ST_SMART_BOARD_FILE 
+	WHERE IDX = #{idx}
+ </select>
+ 
+ <delete id="smartFileDelete" parameterType="SamrtBoardBean">
+	DELETE
+	FROM ST_SMART_BOARD_FILE
+	WHERE IDX = #{idx}
+ </delete>
+ 
+ 
+  <select id="smartReplyCnt" resultType="int">
+  SELECT COUNT(*) AS CNT 
+	FROM ST_SMART_BOARD
+	WHERE TOP_NO = #{no} 
+ </select>
+ 
+  <!-- 게시물 추천 여부 확인 -->
+  <select id="smartIsRcmnd" resultType="int">
+ 	SELECT COUNT(*) AS CNT
+	FROM ST_SMART_BOARD_RCMND
+	WHERE
+	BOARD_NO = #{no}
+	AND USER_ID = #{userId}
+	AND STATUS = 'Y'
+ </select>
+ 
+ 
+<!-- 추천여부 확인 -->
+ <insert id="smartRcmndCnt" parameterType="SamrtBoardBean" >
+ INSERT INTO ST_SMART_BOARD_RCMND
+  (
+    BOARD_NO,
+    USER_ID,
+    STATUS
+  )
+  VALUES
+  (
+    #{no}
+    ,#{userId}
+    ,'Y'
+  )
+ </insert>
+
+ <!-- 게시판 카테고리 이름 --> 
+ <select id="smartBoardNm" resultType="string">
+ 	SELECT CD_NM FROM ST_DETAIL_CD 
+	WHERE CD = #{pageCategory} 
+	AND USE_YN = 'Y'
+ </select>
+
+ 
+ <!-- 코멘트 작성 -->
+ <insert id="smartCommentWrite" parameterType="SmartCommentBean">
+ 	INSERT INTO ST_SMART_COMMENT
+  (
+    IDX,
+    BOARD_NO,
+    CONTENTS,
+    STATUS,
+    USER_ID,
+    USER_NIC_NM,
+    IN_DT
+  )
+  VALUES
+  (
+    SMART_COMMENT_SQ.NEXTVAL
+    ,#{boardNo}
+    ,#{contents}
+    ,'N'
+    ,#{userId}
+    ,#{userNicNm}
+    ,SYSDATE
+  )
+ </insert>
+ 
+ <!-- 코멘트 삭제 -->
+ <delete id="smartCommentDelete" parameterType="SmartCommentBean">
+ 	DELETE
+	FROM ST_SMART_COMMENT
+	WHERE IDX = #{idx}
+ </delete>
+ 
+ <!-- 코멘트 수정 -->
+ <update id="smartCommentModify">
+ 	UPDATE ST_SMART_COMMENT
+	SET CONTENTS = #{contents}
+	,UP_DT = SYSDATE
+	WHERE 
+	IDX = #{idx}
+ </update>
+ 
+</mapper>

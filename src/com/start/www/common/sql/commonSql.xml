@@ -1,0 +1,191 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper   
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"   
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">  
+
+<mapper namespace="com.start.www.common.sql.commonSql">
+
+<resultMap id="CompBeanMap" type="CompBean">
+  <id property="cdNm" column="CD_NM" />
+  <id property="cdExpl" column="CD_EXPL" />
+</resultMap>
+
+<resultMap id="UserBeanMap" type="UserBean">
+  	<id property="userCd" column="USER_CD" />
+	<id property="userId" column="USER_ID" />
+	<id property="userNm" column="USER_NM" />
+	<id property="userPw" column="USER_PW" />
+	<id property="residentNum" column="RESIDENT_NUM" />
+	<id property="userNicNm" column="USER_NIC_NM" />
+	<id property="pwQCd" column="PW_Q_CD" />
+	<id property="pwA" column="PW_A" />
+	<id property="eMail" column="E_MAIL" />
+	<id property="address1" column="ADDRESS1" />
+	<id property="address2" column="ADDRESS2" />
+	<id property="zipCd" column="ZIP_CD" />
+	<id property="homeNumber" column="HOME_NUMBER" />
+	<id property="phoneNumber" column="PHONE_NUMBER" />
+	<id property="jobCd" column="JOB_CD" />
+	<id property="snsReceiveYn" column="SNS_RECEIVE_YN" />
+	<id property="interCdGroup" column="INTER_CD_GROUP" />
+	<id property="joinPathCd" column="JOIN_PATH_CD" />
+	<id property="showInfoLvCd" column="SHOW_INFO_LV_CD" />
+	<id property="showInfoLv" column="SHOW_INFO_LV" />
+	<id property="useYn" column="USE_YN" />
+	<id property="useYnDetailCd" column="USE_YN_DETAIL_CD" />
+	<id property="lockYn" column="LOCK_YN" />
+	<id property="failCnt" column="FAIL_CNT" />
+	<id property="userTypeCd" column="USER_TYPE_CD" />
+	<id property="userType" column="USER_TYPE" />
+	<id property="accessType" column="ACCESS_TYPE" />
+	<id property="accessCd" column="ACCESS_CD" />	
+	<id property="accessIp" column="ACCESS_IP" />
+	<id property="accessBrwsr" column="ACCESS_BRWSR" />
+	
+</resultMap>
+
+
+
+ <select id="test" resultType="int">
+ 	select aaa from test 
+ 	where rownum =1
+ </select>
+ 
+ <!-- 패스워드 질문 콤포넌트 -->
+ <select id="pwQCompList" resultMap="CompBeanMap" >
+ 	SELECT CD,CD_NM FROM ST_DETAIL_CD 
+	WHERE MASTER_CD = '100000'
+	AND USE_YN = 'Y'
+ </select>
+ 
+ <!-- 직업 콤포넌트 -->
+  <select id="jobCompList" resultMap="CompBeanMap" >
+ 	SELECT CD,CD_NM FROM ST_DETAIL_CD 
+	WHERE MASTER_CD = '300000'
+	AND USE_YN = 'Y'
+ </select>
+ 
+ <!-- 가입경로 콤포넌트 -->
+ <select id="joinPathCompList" resultMap="CompBeanMap" >
+ 	SELECT CD,CD_NM FROM ST_DETAIL_CD 
+	WHERE MASTER_CD = '400000'
+	AND USE_YN = 'Y'
+ </select>
+ 
+ <!-- 정보공개 컴포넌트 -->
+ <select id="showInfoCompList" resultMap="CompBeanMap" >
+ 	SELECT CD, CD_EXPL FROM ST_DETAIL_CD 
+	WHERE MASTER_CD = '500000'
+	AND USE_YN = 'Y'
+ </select>
+ 
+ <!-- 아이디 중복 체크-->
+  <select id="checkId"  parameterType="ParamBean" resultType="int" >
+ 	SELECT count(*) cnt FROM ST_USER_INFO 
+	WHERE USER_ID =  #{paramUserId}
+ </select>
+ 
+ <!-- 회원가입 -->
+  <insert id="joinUserAction" parameterType="UserBean" >
+ 	INSERT INTO ST_USER_INFO
+		(
+		USER_CD
+		,USER_ID
+		,USER_NM
+		,USER_PW
+		,RESIDENT_NUM
+		,USER_NIC_NM
+		,PW_Q_CD
+		,PW_A
+		,E_MAIL
+		,ADDRESS1
+		,ADDRESS2
+		,ZIP_CD
+		,HOME_NUMBER
+		,PHONE_NUMBER
+		,JOB_CD
+		,SNS_RECEIVE_YN
+		,INTER_CD_GROUP
+		,JOIN_PATH_CD
+		,SHOW_INFO_LV_CD
+		,USE_YN
+		,LOCK_YN
+		,FAIL_CNT
+		,USER_TYPE_CD
+		)
+		VALUES
+		(
+		USER_SQ.NEXTVAL --USER_CD
+		,#{userId}--USER_ID
+		,#{userNm}--USER_NM
+		,#{userPw}--USER_PW
+		,#{residentNum}--RESIDENT_NUM
+		,#{userNicNm}--USER_NIC_NM
+		,#{pwQCd}--PW_Q_CD
+		,#{pwA}--PW_A
+		,#{eMail}--E_MAIL
+		,#{address1}--ADDRESS1
+		,#{address2}--ADDRESS2
+		,#{zipCd}--ZIP_CD
+		,#{homeNumber}--HOME_NUMBER
+		,#{phoneNumber}--PHONE_NUMBER
+		,#{jobCd}--JOB_CD
+		,#{snsReceiveYn}--SNS_RECEIVE_YN
+		,#{interCdGroup}--INTER_CD_GROUP
+		,#{joinPathCd}--JOIN_PATH_CD
+		,#{showInfoLvCd}--SHOW_INFO_LV_CD
+		,'Y'--USE_YN
+		,'N'--LOCK_YN
+		,0 --FAIL_CNT
+		,'600010' -- USER_TYPE_CD
+		)
+		 	
+ </insert>
+ 
+ <!-- 로그인 -->
+ <select id="loginAction"  parameterType="UserBean" resultMap="UserBeanMap" >
+ 	SELECT
+	  USER_ID
+	, USER_PW
+	, USER_NIC_NM
+	, F_DTE_CD(USER_TYPE_CD) USER_TYPE
+ 	, F_DTE_CD(SHOW_INFO_LV_CD) SHOW_INFO_LV
+	, USE_YN
+	, LOCK_YN
+	, FAIL_CNT 
+	FROM ST_USER_INFO
+	WHERE USER_ID = #{userId}
+ </select>
+ 
+ <!-- 로그인 실패 횟수 변경 -->
+ <update id="UpdateFailCnt" parameterType="UserBean">
+	 UPDATE ST_USER_INFO
+	SET LOCK_YN = #{lockYn}
+	, FAIL_CNT = #{failCnt}
+	WHERE USER_ID = #{userId}
+ </update>
+ 
+ 
+ <!-- 유저 로그기록 -->
+  <insert id="registerUserLog" parameterType="UserBean" >
+	INSERT INTO ST_USER_LOG
+	 (
+	  USER_ID
+	  ,ACCESS_TYPE
+	  ,ACCESS_CD
+	  ,ACCESS_IP
+	  ,ACCESS_BRWSR
+	  ,ACCESS_DT
+	 )
+	 VALUES
+	 (
+	 #{userId}
+	 ,#{accessType}
+	 ,#{accessCd}
+	 ,#{accessIp}
+	 ,#{accessBrwsr}
+	 ,SYSDATE
+	 )
+ </insert>
+ 
+</mapper>

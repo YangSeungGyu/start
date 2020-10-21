@@ -1,0 +1,169 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper   
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"   
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">  
+
+<mapper namespace="com.start.www.admin.sql.adminHomePageSql">
+
+<resultMap id="HomeMainInfoBeanMap" type="HomeMainInfoBean">
+  	
+  	<id property="simpleTotalCnt" column="SIMPLE_TOTAL_CNT" />
+	<id property="simpleTodayCnt" column="SIMPLE_TODAY_CNT" />
+	<id property="simpleMCnt" column="SIMPLE_M_CNT" />
+
+	<id property="smartTotalCnt" column="SMART_TOTAL_CNT" />
+	<id property="smartTodayCnt" column="SMART_TODAY_CNT" />
+	<id property="smartMCnt" column="SMART_M_CNT" />
+	<id property="commentTotalCnt" column="COMMENT_TOTAL_CNT" />
+	<id property="commentTodayCnt" column="COMMENT_TODAY_CNT" />
+	<id property="commentMCnt" column="COMMENT_M_CNT" />
+	<id property="smartCate1Cnt" column="SMART_CATE1_CNT" />
+	<id property="smartCate2Cnt" column="SMART_CATE2_CNT" />
+	
+	<id property="totalUserCnt" column="TOTAL_USER_CNT" />
+	<id property="mUserCnt" column="M_USER_CNT" />
+	<id property="sUserCnt" column="S_USER_CNT" />
+	<id property="uUserCnt" column="U_USER_CNT" />
+
+	<id property="totalLoginCnt" column="TOTAL_LOGIN_CNT" />
+	<id property="todayLoginCnt" column="TODAY_LOGIN_CNT" />
+	
+	
+</resultMap>
+<resultMap id="LogBeanMap" type="LogBean">
+	<id property="userId" column="USER_ID" />
+	<id property="userNm" column="USER_NM" />
+	<id property="userNicNm" column="USER_NIC_NM" />	
+	<id property="userTypeNm" column="USER_TYPE_NM" />
+	<id property="accessNm" column="ACCESS_NM" />	
+	<id property="accessIp" column="ACCESS_IP" />
+	<id property="accessBrwsr" column="ACCESS_BRWSR" />
+	<id property="accessDt" column="ACCESS_DT" />
+</resultMap>
+
+
+<select id="mainInfo" resultMap="HomeMainInfoBeanMap">
+   SELECT 
+   NVL(SIMPLE_TOTAL_CNT,0) AS SIMPLE_TOTAL_CNT
+   ,NVL(SIMPLE_TODAY_CNT,0) AS SIMPLE_TODAY_CNT
+   ,NVL(SIMPLE_M_CNT,0) AS SIMPLE_M_CNT
+   
+   ,NVL(SMART_TOTAL_CNT,0) AS SMART_TOTAL_CNT
+   ,NVL(SMART_TODAY_CNT,0) AS SMART_TODAY_CNT
+   ,NVL(SIMPLE_M_CNT,0) AS SIMPLE_M_CNT
+   
+   ,NVL(SMART_TOTAL_CNT,0) AS SMART_TOTAL_CNT
+   ,NVL(SMART_CATE1_CNT,0) AS SMART_CATE1_CNT
+   ,NVL(SMART_CATE2_CNT,0) AS SMART_CATE2_CNT
+   ,NVL(SMART_TODAY_CNT,0) AS SMART_TODAY_CNT
+	 ,NVL(SMART_M_CNT,0) AS SMART_M_CNT
+    
+	 ,NVL(COMMENT_TOTAL_CNT,0) AS COMMENT_TOTAL_CNT
+	 ,NVL(COMMENT_TODAY_CNT,0) AS COMMENT_TODAY_CNT
+	 ,NVL(COMMENT_M_CNT,0) AS COMMENT_M_CNT
+   
+   ,NVL(TOTAL_USER_CNT,0) AS TOTAL_USER_CNT
+   ,NVL(M_USER_CNT,0) AS M_USER_CNT
+   ,NVL(S_USER_CNT,0) AS S_USER_CNT
+	 ,NVL(U_USER_CNT,0) AS U_USER_CNT
+   
+   ,NVL(TOTAL_LOGIN_CNT,0) AS TOTAL_LOGIN_CNT
+   ,NVL(TODAY_LOGIN_CNT,0) AS TODAY_LOGIN_CNT
+        
+	FROM  
+  (
+  SELECT 
+		SUM(1) AS SIMPLE_TOTAL_CNT
+		,SUM(DECODE(TO_CHAR(ST_DT,'YYYYMMDD'),TO_CHAR(SYSDATE,'YYYYMMDD'),1,0)) AS SIMPLE_TODAY_CNT 
+		,SUM(DECODE(TO_CHAR(ST_DT,'YYYYMM'),TO_CHAR(SYSDATE,'YYYYMM'),1,0)) AS SIMPLE_M_CNT
+	FROM ST_SIMPLE_BOARD 
+	WHERE USE_YN= 'Y'
+	GROUP BY 1
+  ) SMPBD  
+  CROSS JOIN
+	(
+	  SELECT 
+	  SUM(1) AS SMART_TOTAL_CNT
+	  ,SUM(DECODE(CATEGORY,'700001',1,0)) AS SMART_CATE1_CNT
+      ,SUM(DECODE(CATEGORY,'700002',1,0)) AS SMART_CATE2_CNT
+	  ,SUM(DECODE(TO_CHAR(IN_DT,'YYYYMMDD'),TO_CHAR(SYSDATE,'YYYYMMDD'),1,0)) AS SMART_TODAY_CNT 
+	  ,SUM(DECODE(TO_CHAR(IN_DT,'YYYYMM'),TO_CHAR(SYSDATE,'YYYYMM'),1,0)) AS SMART_M_CNT
+	  FROM ST_SMART_BOARD 
+	  WHERE STATUS = 'N'
+	  GROUP BY 1
+	) SMTBD
+	CROSS JOIN
+	(
+	  SELECT
+	  SUM(1) AS COMMENT_TOTAL_CNT
+	  ,SUM(DECODE(TO_CHAR(IN_DT,'YYYYMMDD'),TO_CHAR(SYSDATE,'YYYYMMDD'),1,0)) AS COMMENT_TODAY_CNT 
+	  ,SUM(DECODE(TO_CHAR(IN_DT,'YYYYMM'),TO_CHAR(SYSDATE,'YYYYMM'),1,0)) AS COMMENT_M_CNT
+	  FROM ST_SMART_COMMENT 
+	  GROUP BY 1
+	) CMT
+  CROSS JOIN
+  (
+  SELECT 
+		SUM(1) AS TOTAL_USER_CNT
+		,SUM(DECODE(F_DTE_CD(USER_TYPE_CD),'M',1,0)) AS M_USER_CNT
+		,SUM(DECODE(F_DTE_CD(USER_TYPE_CD),'S',1,0)) AS S_USER_CNT
+		,SUM(DECODE(F_DTE_CD(USER_TYPE_CD),'U',1,0)) AS U_USER_CNT
+	FROM ST_USER_INFO WHERE USE_YN = 'Y'
+	GROUP BY 1
+  )USR
+  CROSS JOIN
+  (
+  SELECT 
+	SUM(1) AS TOTAL_LOGIN_CNT
+	,SUM(DECODE(TO_CHAR(ACCESS_DT,'YYYYMMDD'),TO_CHAR(SYSDATE,'YYYYMMDD'),1,0)) AS TODAY_LOGIN_CNT
+	FROM ST_USER_LOG 
+	WHERE 
+	ACCESS_TYPE = 'L' 
+	GROUP BY 1
+  ) LOG
+</select>
+
+<select id="logMaxCnt" resultType="int">
+	SELECT COUNT(*) AS CNT 
+	FROM ST_USER_LOG
+</select>
+
+<select id="logInfoList" parameterType="LogBean" resultMap="LogBeanMap" >
+	SELECT 
+	AA.* 
+	FROM
+	(
+	SELECT 
+		ROWNUM AS RN, A.* 
+		FROM
+		(
+		SELECT     
+				DECODE(L.USER_ID,NULL,'비회원',L.USER_ID) AS USER_ID
+				,DECODE(L.USER_ID,NULL,'비회원',I.USER_NIC_NM) AS USER_NIC_NM
+				,DECODE(L.USER_ID,NULL,'비회원',I.USER_NM) AS USER_NM
+				,DECODE(F_DTE_CD(I.USER_TYPE_CD),'M','관리자','S','운영자','U','회원','비회원') AS USER_TYPE_NM
+				,CASE
+					WHEN L.ACCESS_TYPE = 'L'
+					THEN '로그인'
+					WHEN L.ACCESS_TYPE = 'O'
+					THEN '로그인'
+					ELSE F_DTE_CD(ACCESS_CD)
+				END AS ACCESS_NM
+				,L.ACCESS_IP
+				,L.ACCESS_BRWSR
+				,TO_CHAR(L.ACCESS_DT,'YYYY-MM-DD HH24:MI:SS') AS ACCESS_DT
+			FROM ST_USER_LOG L
+			LEFT JOIN
+			ST_USER_INFO I
+			ON
+			L.USER_ID = I.USER_ID
+		  ORDER BY ACCESS_DT DESC
+		) A 
+	)AA
+	 <if test="lastRow != 0">	  
+	WHERE RN BETWEEN #{firstRow} AND #{lastRow}
+	</if>
+</select>
+
+ 
+</mapper>

@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8" ?>      
+<!DOCTYPE configuration      
+    PUBLIC "-//mybatis.org//DTD Config 3.0//EN"      
+     "http://mybatis.org/dtd/mybatis-3-config.dtd">  
+
+<configuration>
+	<!-- setting mybatis configuration -->
+	<settings>
+		<setting name="cacheEnabled" value="false" />
+		<setting name="useGeneratedKeys" value="true" />
+		<setting name="mapUnderscoreToCamelCase" value="true" />
+		<setting name="jdbcTypeForNull" value="VARCHAR"/>
+	</settings>
+	
+	<!-- 도메인 추가 -->
+	<typeAliases>
+		<typeAlias type="com.start.www.common.bean.CompBean" alias="CompBean" />
+		<typeAlias type="com.start.www.common.bean.ParamBean" alias="ParamBean" />
+		<typeAlias type="com.start.www.common.bean.UserBean" alias="UserBean" />
+		<typeAlias type="com.start.www.board.bean.SimpleBoardBean" alias="SimpleBoardBean" />
+		<typeAlias type="com.start.www.board.bean.SmartBoardBean" alias="SamrtBoardBean" />
+		<typeAlias type="com.start.www.board.bean.SmartFileBean" alias="SmartFileBean" />
+		<typeAlias type="com.start.www.board.bean.SmartCommentBean" alias="SmartCommentBean" />
+		<typeAlias type="com.start.www.admin.bean.HomeMainInfoBean" alias="HomeMainInfoBean" />
+		<typeAlias type="com.start.www.admin.bean.LogBean" alias="LogBean" />
+	</typeAliases>
+	
+	
+	<mappers>
+		<mapper resource="com/start/www/common/sql/commonSql.xml"/>
+		<mapper resource="com/start/www/board/sql/simpleBoardSql.xml"/>
+		<mapper resource="com/start/www/board/sql/smartBoardSql.xml"/>		
+		<mapper resource="com/start/www/admin/sql/adminHomePageSql.xml"/>
+	</mappers> 
+	
+
+</configuration>

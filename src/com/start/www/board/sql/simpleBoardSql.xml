@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper   
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"   
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">  
+
+<mapper namespace="com.start.www.board.sql.simpleBoardSql">
+
+<resultMap id="SimpleBoardBeanMap" type="SimpleBoardBean">
+  	<id property="no" column="NO" />
+  	<id property="title" column="TITLE" />
+	<id property="contents" column="CONTENTS" />
+	<id property="userId" column="USER_ID" />
+	<id property="userNicNm" column="USER_NIC_NM" />
+	<id property="viewCount" column="VIEW_COUNT" />
+	<id property="stDt" column="ST_DT" />
+	<id property="upDt" column="UP_DT" />
+	<id property="useYn" column="USE_YN" />
+	<id property="isNew" column="IS_NEW" />
+	<id property="upUserId" column="UP_USER_ID" />
+	
+</resultMap>
+
+
+ <!-- 기본 게시판 작성 -->
+  <insert id="simpleBoardWrite" parameterType="SimpleBoardBean" >
+	INSERT INTO ST_SIMPLE_BOARD
+	  (
+	    NO
+	    ,TITLE
+	    ,CONTENTS
+	    ,USER_ID
+	    ,USER_NIC_NM
+	    ,VIEW_COUNT
+	    ,ST_DT
+	    ,USE_YN
+	  )
+	  VALUES
+	  (
+	     SIMPLE_BOARD_SQ.NEXTVAL
+	    , #{title}
+	    , #{contents}
+	    , #{userId}
+	    , #{userNicNm}
+	    , 0
+	    , SYSDATE
+	    , 'Y'
+	  )
+ </insert>
+ 
+  <!-- 기본게시판 최대 개수-->
+  <select id="simpleBoardMaxCnt" resultType="int">
+ 	SELECT 
+	count(*) AS CNT	
+	FROM ST_SIMPLE_BOARD 
+ </select>
+ 
+ 
+  <!-- 기본게시판 리스트 -->
+  <select id="simpleBoardList" parameterType="SimpleBoardBean" resultMap="SimpleBoardBeanMap" >
+ 	SELECT * 
+	FROM
+	(
+	  SELECT 
+	  ROWNUM RN ,SB.* 
+	  FROM
+	  (
+	    SELECT     
+	        NO
+	        ,TITLE
+	        ,USER_ID
+	        ,USER_NIC_NM
+	        ,VIEW_COUNT
+	        ,CASE
+	            WHEN UP_DT IS NULL 
+	            THEN DECODE(TO_CHAR(ST_DT,'YYYY-MM-DD'),TO_CHAR(SYSDATE,'YYYY-MM-DD'),TO_CHAR(ST_DT,'hh24:mm:ss'),TO_CHAR(ST_DT,'YYYY-MM-DD')) 
+	            WHEN UP_DT IS NOT NULL
+	            THEN DECODE(TO_CHAR(UP_DT,'YYYY-MM-DD'),TO_CHAR(SYSDATE,'YYYY-MM-DD'),TO_CHAR(UP_DT,'hh24:mm:ss'),TO_CHAR(UP_DT,'YYYY-MM-DD'))     
+	          END AS UP_DT
+	        ,USE_YN
+	        ,DECODE(TO_CHAR(ST_DT,'YYYY-MM-DD'),TO_CHAR(SYSDATE,'YYYY-MM-DD'),'Y','N') AS IS_NEW
+	      FROM ST_SIMPLE_BOARD 
+	      ORDER BY TO_NUMBER(NO) DESC
+	    ) SB
+	)
+	WHERE RN BETWEEN #{firstRow} AND #{lastRow}
+ </select>
+ 
+ <update id="simpleBoardAddCnt" parameterType="SimpleBoardBean" >
+ 	UPDATE ST_SIMPLE_BOARD
+	SET VIEW_COUNT = 
+	(SELECT VIEW_COUNT+1 FROM ST_SIMPLE_BOARD WHERE NO = #{no} AND ROWNUM = 1)
+	WHERE NO = #{no}
+	AND USE_YN = 'Y'
+ </update>
+  
+  <!-- 기본게시판 상세 -->
+  <select id="simpleBoardRead" parameterType="SimpleBoardBean" resultMap="SimpleBoardBeanMap" >
+ 	SELECT 
+	  NO
+	  ,TITLE
+	  ,USER_ID
+	  ,CONTENTS
+	  ,USER_NIC_NM
+	  ,VIEW_COUNT
+	  ,CASE
+	      WHEN UP_DT IS NULL 
+	      THEN DECODE(TO_CHAR(ST_DT,'YYYY-MM-DD'),TO_CHAR(SYSDATE,'YYYY-MM-DD'),TO_CHAR(ST_DT,'hh24:mm:ss'),TO_CHAR(ST_DT,'YYYY-MM-DD')) 
+	      WHEN UP_DT IS NOT NULL
+	      THEN DECODE(TO_CHAR(UP_DT,'YYYY-MM-DD'),TO_CHAR(SYSDATE,'YYYY-MM-DD'),TO_CHAR(UP_DT,'hh24:mm:ss'),TO_CHAR(UP_DT,'YYYY-MM-DD'))     
+    	END AS UP_DT
+	  ,USE_YN
+	  
+	FROM ST_SIMPLE_BOARD 
+	WHERE  USE_YN='Y'
+	AND NO = #{no}
+ </select>
+ 
+ <delete id="simpleBoardDelete" parameterType="SimpleBoardBean">
+	DELETE
+	FROM ST_SIMPLE_BOARD
+	WHERE NO = #{no}
+ </delete>
+ 
+ 
+ <update id="simpleBoardModify">
+	UPDATE ST_SIMPLE_BOARD
+	SET TITLE = #{title}
+	, CONTENTS = #{contents}
+	, UP_USER_ID = #{upUserId}
+	, UP_DT = SYSDATE
+	WHERE NO = #{no}
+ </update>
+ 
+</mapper>
